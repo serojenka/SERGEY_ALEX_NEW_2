@@ -16,10 +16,11 @@
 */
 
 
-#include <sstream> 
+#include <sstream>
 #include "Timer.h"
 #include "Vanity.h"
 #include "SECP256k1.h"
+#include "GPU/GPUEngine.h"
 #include <fstream>
 #include <string>
 #include <string.h>
@@ -76,16 +77,16 @@ void setTerminalRawMode(bool enable) {
 void setNonBlockingInput(bool enable) {
 	int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	if (enable) {
-		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalità non bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalitï¿½ non bloccante
 	}
 	else {
-		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalità bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalitï¿½ bloccante
 	}
 }
 
 void monitorKeypress() {
 	setTerminalRawMode(true);
-	setNonBlockingInput(true);  // Imposta stdin in modalità non bloccante
+	setNonBlockingInput(true);  // Imposta stdin in modalitï¿½ non bloccante
 
 	while (!stopMonitorKey) {
 		Timer::SleepMillis(1);
@@ -97,7 +98,7 @@ void monitorKeypress() {
 		}
 	}
 
-	setNonBlockingInput(false);  // Ripristina modalità normale
+	setNonBlockingInput(false);  // Ripristina modalitï¿½ normale
 	setTerminalRawMode(false);
 }
 #endif
@@ -111,17 +112,35 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random]\n \n");
-	printf(" -v: Print version\n");
-	printf(" -i inputfile: Get list of addresses to search from specified file\n");
-	printf(" -o outputfile: Output results to the specified file\n");
-	printf(" -gpuId: GPU to use, default is 0\n");
-	printf(" -start start Private Key HEX\n");
-	printf(" -range bit range dimension. start -> (start + 2^range).\n");
-	printf(" -m: Max number of prefixes found by each kernel call, default is 262144 (use multiple of 65536)\n");
-	printf(" -stop: Stop when all prefixes are found\n");
-	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default\n");
-	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
+	printf("VanitySearch-Bitcrack v" RELEASE "\n");
+	printf("GPU-accelerated Bitcoin private key search tool\n\n");
+	printf("Usage: vanitysearch [OPTIONS] <ADDRESS>\n\n");
+	printf("Options:\n");
+	printf("  -v             Print version information\n");
+	printf("  -l, -list      List available GPUs with detailed information\n");
+	printf("  -gpuId N       GPU to use (default: 0)\n");
+	printf("  -i FILE        Get list of addresses to search from specified file\n");
+	printf("  -o FILE        Output results to the specified file\n");
+	printf("  -start HEX     Starting private key in hexadecimal\n");
+	printf("  -range N       Bit range dimension: start -> (start + 2^N)\n");
+	printf("  -m N           Max number of prefixes found per kernel call\n");
+	printf("                 (default: 262144, use multiple of 65536)\n");
+	printf("  -stop          Stop when all prefixes are found\n");
+	printf("  -random        Random mode: each GPU thread scans 1024 random\n");
+	printf("                 sequential keys at each step\n");
+	printf("  -backup        Enable backup mode for resumable sequential searches\n");
+	printf("                 (does not work with random mode)\n");
+	printf("\n");
+	printf("Examples:\n");
+	printf("  vanitysearch -gpuId 0 -start 1000000 -range 40 1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH\n");
+	printf("  vanitysearch -l                    # List available GPUs\n");
+	printf("  vanitysearch -i addresses.txt -o found.txt -range 50\n");
+	printf("\n");
+	printf("Performance Tips:\n");
+	printf("  - Build for your specific GPU: make ARCH=sm_XX\n");
+	printf("  - Use -l to see recommended build commands\n");
+	printf("  - Increase -m for searching many addresses\n");
+	printf("\n");
 	exit(-1);
 
 }
@@ -581,9 +600,13 @@ int main(int argc, char* argv[]) {
 			a++;
 		}
 		else if (strcmp(argv[a], "-v") == 0) {
-			printf("%s\n", RELEASE);
+			printf("VanitySearch-Bitcrack v%s\n", RELEASE);
 			exit(0);
-
+		}
+		else if (strcmp(argv[a], "-l") == 0 || strcmp(argv[a], "-list") == 0 ||
+		         strcmp(argv[a], "--list-gpus") == 0) {
+			GPUEngine::PrintCudaInfo();
+			exit(0);
 		}
 		else if (strcmp(argv[a], "-o") == 0) {
 			a++;

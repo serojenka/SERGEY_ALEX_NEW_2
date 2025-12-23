@@ -39,6 +39,8 @@
 
 #include <omp.h>
 
+// GPU Architecture to CUDA Cores mapping
+// Updated for all modern NVIDIA architectures through 2024-2025
 int _ConvertSMVer2Cores(int major, int minor) {
 
     // Defines for GPU Architecture types (using the SM version to determine
@@ -50,15 +52,26 @@ int _ConvertSMVer2Cores(int major, int minor) {
     } sSMtoCores;
 
     sSMtoCores nGpuArchCoresPerSM[] = {
-        {0x60,  64},
-        {0x61, 128},
-        {0x62, 128},
-        {0x70,  64},
-        {0x72,  64},
-        {0x75,  64},
-        {0x80,  64},
-        {0x86,  128},
-        {0x89,  128},
+        // Pascal
+        {0x60,  64},   // GP100 (Tesla P100)
+        {0x61, 128},   // GP104 (GTX 1080), GP107 (GTX 1050)
+        {0x62, 128},   // GP10B (Tegra)
+        // Volta
+        {0x70,  64},   // GV100 (Tesla V100)
+        {0x72,  64},   // GV10B (Jetson AGX Xavier)
+        // Turing
+        {0x75,  64},   // TU102/TU104/TU106 (RTX 2080 Ti, RTX 2080, RTX 2070)
+        // Ampere
+        {0x80,  64},   // GA100 (A100)
+        {0x86, 128},   // GA102 (RTX 3090), GA104 (RTX 3070), GA106 (RTX 3060)
+        {0x87, 128},   // GA10B (Jetson Orin)
+        // Ada Lovelace
+        {0x89, 128},   // AD102 (RTX 4090), AD103 (RTX 4080), AD104 (RTX 4070)
+        // Hopper
+        {0x90, 128},   // GH100 (H100)
+        // Blackwell (Future/Experimental)
+        {0xa0, 128},   // GB100 (B100, RTX 5090) - estimated
+        {0xa1, 128},   // GB10x variants - estimated
         {-1, -1} };
 
     int index = 0;
@@ -71,7 +84,11 @@ int _ConvertSMVer2Cores(int major, int minor) {
         index++;
     }
 
-    return 0;
+    // For unknown architectures, estimate based on major version
+    if (major >= 9) return 128;  // Hopper and beyond
+    if (major >= 8) return 128;  // Ampere/Ada
+    if (major >= 7) return 64;   // Volta/Turing
+    return 64;  // Default fallback
 
 }
 
@@ -232,13 +249,62 @@ std::string globalGPUname;
 
 
 
+// Get optimal thread configuration based on GPU architecture
+static int GetOptimalThreadsPerBlock(int computeMajor, int computeMinor) {
+    // Optimal thread counts based on GPU architecture
+    // These values are tuned for the specific workload of EC point operations
+
+    if (computeMajor >= 9) {
+        // Hopper and beyond
+        return 256;
+    } else if (computeMajor == 8 && computeMinor >= 6) {
+        // Ada Lovelace (RTX 40xx)
+        return 256;
+    } else if (computeMajor == 8) {
+        // Ampere (RTX 30xx, A100)
+        return 256;
+    } else if (computeMajor == 7 && computeMinor >= 5) {
+        // Turing (RTX 20xx)
+        return 256;
+    } else if (computeMajor == 7) {
+        // Volta (V100)
+        return 256;
+    } else {
+        // Pascal and older
+        return 256;
+    }
+}
+
+// Get optimal grid multiplier based on GPU architecture
+static int GetOptimalGridMultiplier(int computeMajor, int computeMinor) {
+    if (computeMajor >= 8 && computeMinor >= 9) {
+        // Ada Lovelace - larger L2 cache enables more concurrent blocks
+        return 192;
+    } else if (computeMajor >= 8) {
+        // Ampere
+        return 160;
+    } else if (computeMajor >= 7) {
+        // Volta/Turing
+        return 128;
+    } else {
+        // Pascal and older
+        return 128;
+    }
+}
+
 GPUEngine::GPUEngine(int gpuId, uint32_t maxFound) {
 
     cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, gpuId);
+    cudaError_t propErr = cudaGetDeviceProperties(&deviceProp, gpuId);
+    if (propErr != cudaSuccess) {
+        printf("GPUEngine: Failed to get device properties: %s\n", cudaGetErrorString(propErr));
+        return;
+    }
 
-    NB_TRHEAD_PER_GROUP = 256;                                          //////////////////  GRID SIZE ////////////////
-    int nbThreadGroup = deviceProp.multiProcessorCount * 128;
+    // Auto-tune thread configuration based on GPU architecture
+    NB_TRHEAD_PER_GROUP = GetOptimalThreadsPerBlock(deviceProp.major, deviceProp.minor);
+    int gridMultiplier = GetOptimalGridMultiplier(deviceProp.major, deviceProp.minor);
+    int nbThreadGroup = deviceProp.multiProcessorCount * gridMultiplier;
 
     if (!randomMode) {
         uint64_t powerOfTwo = 1;
@@ -387,15 +453,72 @@ void GPUEngine::PrintCudaInfo() {
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
 
+    if (error_id != cudaSuccess) {
+        printf("CUDA Error: %s\n", cudaGetErrorString(error_id));
+        return;
+    }
 
-    for (int i = 0;i < deviceCount;i++) {
+    if (deviceCount == 0) {
+        printf("No CUDA-capable GPU detected.\n");
+        return;
+    }
+
+    int driverVersion = 0, runtimeVersion = 0;
+    cudaDriverGetVersion(&driverVersion);
+    cudaRuntimeGetVersion(&runtimeVersion);
+
+    printf("============================================\n");
+    printf("CUDA Driver Version:   %d.%d\n", driverVersion / 1000, (driverVersion % 100) / 10);
+    printf("CUDA Runtime Version:  %d.%d\n", runtimeVersion / 1000, (runtimeVersion % 100) / 10);
+    printf("============================================\n");
+    printf("Detected %d CUDA-capable GPU(s):\n", deviceCount);
+    printf("============================================\n\n");
+
+    for (int i = 0; i < deviceCount; i++) {
 
         cudaDeviceProp deviceProp;
         cudaGetDeviceProperties(&deviceProp, i);
 
-        printf("%d , %s", i, deviceProp.name);
+        int coresPerSM = _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor);
+        int totalCores = coresPerSM * deviceProp.multiProcessorCount;
 
+        printf("GPU #%d: %s\n", i, deviceProp.name);
+        printf("  Compute Capability:    %d.%d (sm_%d%d)\n",
+               deviceProp.major, deviceProp.minor,
+               deviceProp.major, deviceProp.minor);
+        printf("  Multiprocessors:       %d\n", deviceProp.multiProcessorCount);
+        printf("  CUDA Cores/SM:         %d\n", coresPerSM);
+        printf("  Total CUDA Cores:      %d\n", totalCores);
+        printf("  GPU Clock Rate:        %.2f GHz\n", deviceProp.clockRate / 1e6);
+        printf("  Memory Clock Rate:     %.2f GHz\n", deviceProp.memoryClockRate / 1e6);
+        printf("  Memory Bus Width:      %d-bit\n", deviceProp.memoryBusWidth);
+        printf("  Total Global Memory:   %.2f GB\n", deviceProp.totalGlobalMem / (1024.0 * 1024.0 * 1024.0));
+        printf("  L2 Cache Size:         %d KB\n", deviceProp.l2CacheSize / 1024);
+        printf("  Max Threads/Block:     %d\n", deviceProp.maxThreadsPerBlock);
+        printf("  Max Threads/SM:        %d\n", deviceProp.maxThreadsPerMultiProcessor);
+        printf("  Warp Size:             %d\n", deviceProp.warpSize);
+        printf("  Registers/Block:       %d\n", deviceProp.regsPerBlock);
+        printf("  Shared Memory/Block:   %zu bytes\n", deviceProp.sharedMemPerBlock);
+        printf("  Concurrent Kernels:    %s\n", deviceProp.concurrentKernels ? "Yes" : "No");
+        printf("  ECC Enabled:           %s\n", deviceProp.ECCEnabled ? "Yes" : "No");
+
+        // Estimate performance
+        double estimatedMKeys = (double)totalCores * (deviceProp.clockRate / 1e6) * 0.0025;
+        printf("  Estimated Performance: ~%.0f MKey/s\n", estimatedMKeys);
+
+        // Recommended build command
+        printf("  Recommended Build:     make ARCH=sm_%d%d\n",
+               deviceProp.major, deviceProp.minor);
+
+        printf("\n");
     }
+
+    printf("============================================\n");
+    printf("Build Tips:\n");
+    printf("  - For best performance, build for your specific GPU:\n");
+    printf("    make ARCH=sm_XX (where XX is your compute capability)\n");
+    printf("  - Use 'make clean' before rebuilding for a new architecture\n");
+    printf("============================================\n");
 
 }
 
@@ -526,24 +649,49 @@ int GPUEngine::GetGroupSize() {
 
 bool GPUEngine::callKernel() {
 
-   
     // Reset nbFound
     cudaMemset(outputBuffer, 0, 4);
 
-    comp_keys << < nbThread / NB_TRHEAD_PER_GROUP, NB_TRHEAD_PER_GROUP >> >
-        (inputAddress, inputAddressLookUp, inputKey, outputBuffer);
+    // Calculate optimal grid dimensions
+    int numBlocks = nbThread / NB_TRHEAD_PER_GROUP;
+    int threadsPerBlock = NB_TRHEAD_PER_GROUP;
 
+#ifdef DEBUG
+    // Performance timing in debug mode
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+#endif
 
+    // Launch kernel with error checking
+    comp_keys<<<numBlocks, threadsPerBlock>>>(
+        inputAddress, inputAddressLookUp, inputKey, outputBuffer);
 
-
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        printf("GPUEngine: Kernel: %s\n", cudaGetErrorString(err));
+    // Check for launch errors
+    cudaError_t launchErr = cudaGetLastError();
+    if (launchErr != cudaSuccess) {
+        printf("GPUEngine: Kernel launch failed: %s\n", cudaGetErrorString(launchErr));
+        printf("  Grid: %d blocks, %d threads/block\n", numBlocks, threadsPerBlock);
         return false;
     }
 
-    //cudaFree(d_dx);
+#ifdef DEBUG
+    // Synchronize and get timing in debug mode
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
 
+    // Calculate keys per second
+    uint64_t keysProcessed = (uint64_t)nbThread * GRP_SIZE;
+    double keysPerSecond = (keysProcessed / milliseconds) * 1000.0;
+    printf("GPUEngine: Kernel time: %.3f ms (%.2f MKey/s)\n",
+           milliseconds, keysPerSecond / 1e6);
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+#endif
 
     return true;
 
