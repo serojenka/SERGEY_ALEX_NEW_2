@@ -43,7 +43,7 @@ using namespace std;
 //Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
-	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, int jumpBits):inputAddresses(inputAddresses) 
+	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch):inputAddresses(inputAddresses) 
 {
 	this->secp = secp;
 	this->searchMode = searchMode;
@@ -54,7 +54,10 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->searchType = -1;
 	this->bc = bc;	
 	this->slices = slices;
-	this->jumpBits = jumpBits;
+	
+	// Parse jump after match value
+	this->jumpAfterMatch.SetBase10((char*)jumpAfterMatch.c_str());
+	this->hasJumpAfterMatch = !this->jumpAfterMatch.IsZero();
 
 	rseed(static_cast<unsigned long>(time(NULL)));
 	
@@ -626,6 +629,13 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
+					
+					// Apply jump after match if specified
+					if (hasJumpAfterMatch) {
+						bc->ksNext.Add(&jumpAfterMatch);
+						fprintf(stdout, "\n[Jump] Applied jump of %s, continuing from %s\n", 
+							jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
+					}
 				}
 
 			}
@@ -653,6 +663,13 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(addr, key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
+					
+					// Apply jump after match if specified
+					if (hasJumpAfterMatch) {
+						bc->ksNext.Add(&jumpAfterMatch);
+						fprintf(stdout, "\n[Jump] Applied jump of %s, continuing from %s\n", 
+							jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
+					}
 				}
 
 			}
@@ -970,7 +987,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				RandomJump_K_last.Set(&RandomJump_K);
 				RandomJump_K_tot.Add(&RandomJump_K);
 
-				RandomJump_K.Rand(jumpBits);
+				RandomJump_K.Rand(256);
 				RandomJump_K.Mod(&stepThread);
 				RandomJump_K.Sub(&RandomJump_K_tot);
 				

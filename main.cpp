@@ -124,7 +124,7 @@ void printUsage() {
 	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
 	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
 	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
-	printf(" -j jump: Set jump size in bits for random mode (default: 256, range: 1-256). Determines the size of random jumps\n");
+	printf(" -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, search continues from current_key + jump\n");
 	exit(-1);
 
 }
@@ -566,7 +566,7 @@ int main(int argc, char* argv[]) {
 	string start = "0";
 	int slices = 1;  // Default slices value
 	string gridParsed = "";  // For parsing grid parameter
-	int jumpBits = DEFAULT_JUMP_BITS;  // Default jump size in bits for random mode
+	string jumpAfterMatch = "0";  // Decimal jump value to apply after finding a match
 	bool jumpSpecified = false;  // Track if -j was explicitly specified
 	
 	// bitcrack mod
@@ -646,11 +646,7 @@ int main(int argc, char* argv[]) {
 		}
 		else if (strcmp(argv[a], "-j") == 0) {
 			a++;
-			jumpBits = getInt("jump", argv[a]);
-			if (jumpBits < 1 || jumpBits > 256) {
-				fprintf(stderr, "[ERROR] jump must be between 1 and 256\n");
-				exit(-1);
-			}
+			jumpAfterMatch = string(argv[a]);
 			jumpSpecified = true;
 			a++;
 		}
@@ -667,11 +663,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "VanitySearch-Bitcrack v" RELEASE "\n");
-
-	// Validate parameter combinations
-	if (jumpSpecified && !randomMode) {
-		fprintf(stdout, "[WARNING] -j parameter specified without -random mode. Jump size will be ignored.\n");
-	}
 
 	// Parse grid parameter if provided
 	if (!gridParsed.empty()) {
@@ -734,9 +725,11 @@ int main(int argc, char* argv[]) {
 			fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
 		}
 		fprintf(stdout, "[GPU] Slices: %d\n", slices);
+		if (jumpSpecified) {
+			fprintf(stdout, "[Jump] After match jump: %s (decimal)\n", jumpAfterMatch.c_str());
+		}
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
-			fprintf(stdout, "[Random] Jump size: %d bits\n", jumpBits);
 		}
 		fflush(stdout);
 
@@ -751,7 +744,7 @@ int main(int argc, char* argv[]) {
 		}
 	repeatP:
 		Paused = false;
-		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpBits);
+		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch);
 		v->Search(gpuId, gridSize);
 
 		while (Paused) {

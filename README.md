@@ -47,7 +47,7 @@ VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
 
  -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance by better utilizing GPU resources. Inspired by Cyclone
 
- -j jump: Set jump size in bits for random mode (default: 256). Controls the size of random jumps when using -random mode. Lower values = smaller jumps, higher values = larger jumps
+ -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, the search continues from current_key + jump. This allows finding sequential patterns.
 
 
 If you want to search for multiple addresses or prefixes, insert them into the input file.
@@ -73,7 +73,7 @@ Windows:
 
 ```./VanitySearch.exe -gpuId 0 -start 100000000000000000 -range 68 -random 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
 
-```./VanitySearch.exe -gpuId 0 -start 100000000000000000 -range 68 -random -j 128 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
+```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -j 1000 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
 
 ```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -backup 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
 
@@ -85,7 +85,7 @@ Linux
 
 ```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -grid 512,512 -slices 8 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
 
-```./vanitysearch -gpuId 0 -start 100000000000000000 -range 68 -random -j 64 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
+```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -j 5000 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
 
 
 # License
