@@ -15,6 +15,68 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ * COMPILATION INSTRUCTIONS / ИНСТРУКЦИИ ПО КОМПИЛЯЦИИ
+ * 
+ * ============================================================================
+ * LINUX:
+ * ============================================================================
+ * Prerequisites / Необходимые компоненты:
+ *   - g++-9 or higher / g++-9 или выше
+ *   - CUDA Toolkit 11.0 or higher / CUDA Toolkit 11.0 или выше
+ *   - Make
+ * 
+ * Compilation command / Команда компиляции:
+ *   make all
+ * 
+ * Debug build / Сборка для отладки:
+ *   make debug=1 all
+ * 
+ * Clean build artifacts / Очистка артефактов сборки:
+ *   make clean
+ * 
+ * The compiled binary will be: ./vanitysearch
+ * Скомпилированный файл будет: ./vanitysearch
+ * 
+ * ============================================================================
+ * WINDOWS 64-bit:
+ * ============================================================================
+ * Prerequisites / Необходимые компоненты:
+ *   - Visual Studio 2019 or higher / Visual Studio 2019 или выше
+ *   - CUDA Toolkit 11.0 or higher / CUDA Toolkit 11.0 или выше
+ *   - Windows SDK
+ * 
+ * Method 1 - Visual Studio GUI / Метод 1 - Графический интерфейс Visual Studio:
+ *   1. Open VanitySearch.sln in Visual Studio
+ *      Откройте VanitySearch.sln в Visual Studio
+ *   2. Select "Release" and "x64" configuration
+ *      Выберите конфигурацию "Release" и "x64"
+ *   3. Build -> Build Solution (Ctrl+Shift+B)
+ *      Сборка -> Собрать решение (Ctrl+Shift+B)
+ * 
+ * Method 2 - Command Line / Метод 2 - Командная строка:
+ *   Open "x64 Native Tools Command Prompt for VS 2019" and run:
+ *   Откройте "x64 Native Tools Command Prompt for VS 2019" и выполните:
+ *   
+ *   msbuild VanitySearch.sln /p:Configuration=Release /p:Platform=x64
+ * 
+ * The compiled binary will be in: x64\Release\VanitySearch.exe
+ * Скомпилированный файл будет в: x64\Release\VanitySearch.exe
+ * 
+ * ============================================================================
+ * NOTES / ПРИМЕЧАНИЯ:
+ * ============================================================================
+ * - Ensure CUDA is properly installed and nvcc is in PATH
+ *   Убедитесь, что CUDA установлена правильно и nvcc в PATH
+ * - For Linux: Edit Makefile to adjust CUDA path if needed
+ *   Для Linux: Отредактируйте Makefile для настройки пути к CUDA при необходимости
+ * - Supported CUDA architectures: compute_60, compute_61, compute_75, 
+ *   compute_80, compute_86, compute_89
+ *   Поддерживаемые архитектуры CUDA: compute_60, compute_61, compute_75,
+ *   compute_80, compute_86, compute_89
+ * ============================================================================
+ */
+
 
 #include <sstream> 
 #include "Timer.h"
