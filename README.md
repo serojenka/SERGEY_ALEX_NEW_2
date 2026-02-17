@@ -21,7 +21,7 @@ This is useful in case the program closes for any reason.</li>
 # Usage
 
 
-VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n]
+VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n]
 
  -v: Print version
  
@@ -39,7 +39,7 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
 
  -stop: Stop when all prefixes are found
 
- -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default
+ -random: Random mode active. Each GPU thread scan 1024 random sequentially keys at each step. Not active by default
 
  -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode.
 

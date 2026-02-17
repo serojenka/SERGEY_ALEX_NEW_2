@@ -111,7 +111,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices]\n \n");
+	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -120,7 +120,7 @@ void printUsage() {
 	printf(" -range bit range dimension. start -> (start + 2^range).\n");
 	printf(" -m: Max number of prefixes found by each kernel call, default is 262144 (use multiple of 65536)\n");
 	printf(" -stop: Stop when all prefixes are found\n");
-	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default\n");
+	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentially keys at each step. Not active by default\n");
 	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
 	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
 	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
@@ -711,7 +711,9 @@ int main(int argc, char* argv[]) {
 		fprintf(stdout, "[keyspace]  range=2^%d\n", range);
 		fprintf(stdout, "[keyspace]  start=%s\n", bc->ksStart.GetBase16().c_str());
 		fprintf(stdout, "[keyspace]    end=%s\n", bc->ksFinish.GetBase16().c_str());
-		fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
+		if (gridSize.size() >= 2) {
+			fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
+		}
 		fprintf(stdout, "[GPU] Slices: %d\n", slices);
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
