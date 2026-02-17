@@ -21,7 +21,7 @@ This is useful in case the program closes for any reason.</li>
 # Usage
 
 
-VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n]
+VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n] [-j jump]
 
  -v: Print version
  
@@ -47,6 +47,8 @@ VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
 
  -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance by better utilizing GPU resources. Inspired by Cyclone
 
+ -j jump: Set jump size in bits for random mode (default: 256). Controls the size of random jumps when using -random mode. Lower values = smaller jumps, higher values = larger jumps
+
 
 If you want to search for multiple addresses or prefixes, insert them into the input file.
 
@@ -71,6 +73,8 @@ Windows:
 
 ```./VanitySearch.exe -gpuId 0 -start 100000000000000000 -range 68 -random 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
 
+```./VanitySearch.exe -gpuId 0 -start 100000000000000000 -range 68 -random -j 128 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
+
 ```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -backup 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
 
 ```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -grid 256,128 -slices 16 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
@@ -80,6 +84,8 @@ Linux
 ```./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40```
 
 ```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -grid 512,512 -slices 8 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
+
+```./vanitysearch -gpuId 0 -start 100000000000000000 -range 68 -random -j 64 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
 
 
 # License

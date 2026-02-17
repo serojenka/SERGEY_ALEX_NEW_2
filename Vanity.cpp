@@ -43,7 +43,7 @@ using namespace std;
 //Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
-	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices):inputAddresses(inputAddresses) 
+	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, int jumpBits):inputAddresses(inputAddresses) 
 {
 	this->secp = secp;
 	this->searchMode = searchMode;
@@ -54,6 +54,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->searchType = -1;
 	this->bc = bc;	
 	this->slices = slices;
+	this->jumpBits = jumpBits;
 
 	rseed(static_cast<unsigned long>(time(NULL)));
 	
@@ -969,7 +970,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				RandomJump_K_last.Set(&RandomJump_K);
 				RandomJump_K_tot.Add(&RandomJump_K);
 
-				RandomJump_K.Rand(256);
+				RandomJump_K.Rand(jumpBits);
 				RandomJump_K.Mod(&stepThread);
 				RandomJump_K.Sub(&RandomJump_K_tot);
 				
