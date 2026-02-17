@@ -60,20 +60,9 @@ static inline bool ripemd160_comp_hash_prefix(uint8_t *h0, uint8_t *h1, int pref
     return false;
   }
   
-  // Compare full 4-byte words first for efficiency
-  int fullWords = prefixLength / 4;
-  uint32_t *h0i = (uint32_t *)h0;
-  uint32_t *h1i = (uint32_t *)h1;
-  
-  for (int i = 0; i < fullWords; i++) {
-    if (h0i[i] != h1i[i]) return false;
-  }
-  
-  // Compare remaining bytes
-  int remainingBytes = prefixLength % 4;
-  int offset = fullWords * 4;
-  for (int i = 0; i < remainingBytes; i++) {
-    if (h0[offset + i] != h1[offset + i]) return false;
+  // Use byte-by-byte comparison for safety and portability
+  for (int i = 0; i < prefixLength; i++) {
+    if (h0[i] != h1[i]) return false;
   }
   
   return true;
