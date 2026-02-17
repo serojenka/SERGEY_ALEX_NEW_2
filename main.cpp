@@ -648,6 +648,7 @@ int main(int argc, char* argv[]) {
 			a++;
 			jumpAfterMatch = string(argv[a]);
 			// Validate that jump value is a valid non-negative decimal number
+			// Note: SetBase10() interprets the string as decimal (base 10) regardless of leading zeros
 			bool valid = !jumpAfterMatch.empty();
 			if (valid) {
 				for (char c : jumpAfterMatch) {

@@ -109,7 +109,7 @@ private:
 	void checkAddresses(bool compressed, Int key, int i, Point p1);
 	void checkAddressesSSE(bool compressed, Int key, int i, Point p1, Point p2, Point p3, Point p4);
 	void output(std::string addr, std::string pAddr, std::string pAddrHex, std::string pubKey);
-	void applyJumpAfterMatch();  // Apply jump and display message
+	void applyJumpAfterMatch();  // Adds jumpAfterMatch to bc->ksNext if hasJumpAfterMatch is true, displays jump message
 
 #ifdef WIN64
 	HANDLE mutex;
