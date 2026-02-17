@@ -104,7 +104,6 @@ void monitorKeypress() {
 
 
 #define RELEASE "2.2 by FixedPaul"
-#define DEFAULT_JUMP_BITS 256
 
 using namespace std;
 
