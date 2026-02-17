@@ -609,6 +609,14 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 	}
 }
 
+void VanitySearch::applyJumpAfterMatch() {
+	if (hasJumpAfterMatch) {
+		bc->ksNext.Add(&jumpAfterMatch);
+		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
+			jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
+	}
+}
+
 void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t incr, int endomorphism, bool mode) {
 	
 	vector<ADDRESS_ITEM>* pi = addresses[prefIdx].items;	
@@ -630,13 +638,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					
-					// Apply jump after match if specified
-					if (hasJumpAfterMatch) {
-						bc->ksNext.Add(&jumpAfterMatch);
-						fprintf(stdout, "\n[Jump] Applied jump of %s, continuing from %s\n", 
-							jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
-					}
+					applyJumpAfterMatch();
 				}
 
 			}
@@ -664,13 +666,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(addr, key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					
-					// Apply jump after match if specified
-					if (hasJumpAfterMatch) {
-						bc->ksNext.Add(&jumpAfterMatch);
-						fprintf(stdout, "\n[Jump] Applied jump of %s, continuing from %s\n", 
-							jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
-					}
+					applyJumpAfterMatch();
 				}
 
 			}

@@ -648,12 +648,10 @@ int main(int argc, char* argv[]) {
 			a++;
 			jumpAfterMatch = string(argv[a]);
 			// Validate that jump value is a valid non-negative decimal number
-			bool valid = true;
-			if (jumpAfterMatch.empty()) {
-				valid = false;
-			} else {
-				for (size_t i = 0; i < jumpAfterMatch.length(); i++) {
-					if (!isdigit(jumpAfterMatch[i])) {
+			bool valid = !jumpAfterMatch.empty();
+			if (valid) {
+				for (char c : jumpAfterMatch) {
+					if (!isdigit(c)) {
 						valid = false;
 						break;
 					}
@@ -741,7 +739,7 @@ int main(int argc, char* argv[]) {
 			fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
 		}
 		fprintf(stdout, "[GPU] Slices: %d\n", slices);
-		if (jumpSpecified) {
+		if (jumpSpecified && jumpAfterMatch != "0") {
 			fprintf(stdout, "[Jump] After match jump: %s (decimal)\n", jumpAfterMatch.c_str());
 		}
 		if (randomMode) {
