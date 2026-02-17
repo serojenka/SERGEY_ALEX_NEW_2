@@ -55,6 +55,11 @@ static inline bool ripemd160_comp_hash(uint8_t *h0, uint8_t *h1) {
 
 // Compare only the first 'prefixLength' bytes of RIPEMD-160 hashes
 static inline bool ripemd160_comp_hash_prefix(uint8_t *h0, uint8_t *h1, int prefixLength) {
+  // Validate prefixLength to prevent out-of-bounds access
+  if (prefixLength < 1 || prefixLength > 20) {
+    return false;
+  }
+  
   // Compare full 4-byte words first for efficiency
   int fullWords = prefixLength / 4;
   uint32_t *h0i = (uint32_t *)h0;
