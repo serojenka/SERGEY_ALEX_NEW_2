@@ -21,7 +21,7 @@ This is useful in case the program closes for any reason.</li>
 # Usage
 
 
-VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop]
+VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n]
 
  -v: Print version
  
@@ -42,6 +42,10 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
  -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default
 
  -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode.
+
+ -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block. Inspired by Cyclone
+
+ -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance by better utilizing GPU resources. Inspired by Cyclone
 
 
 If you want to search for multiple addresses or prefixes, insert them into the input file.
@@ -69,9 +73,13 @@ Windows:
 
 ```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -backup 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
 
+```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -grid 256,128 -slices 16 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
+
 Linux
 
 ```./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40```
+
+```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -grid 512,512 -slices 8 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
 
 
 # License

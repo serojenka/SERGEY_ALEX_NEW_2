@@ -92,7 +92,7 @@ class VanitySearch {
 public:
 
 	VanitySearch(Secp256K1* secp, std::vector<std::string>& address, int searchMode,
-		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc);
+		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices = 1);
 
 	void Search(std::vector<int> gpuId, std::vector<int> gridSize);
 	void FindKeyGPU(TH_PARAM* p);
@@ -153,6 +153,8 @@ private:
 	void saveProgress(TH_PARAM* p, Int& lastSaveKey, BITCRACK_PARAM* bc);
 
 	Int firstGPUThreadLastPrivateKey;
+	
+	int slices;  // Number of batch slices for GPU optimization
 
 	Int beta;
 	Int lambda;

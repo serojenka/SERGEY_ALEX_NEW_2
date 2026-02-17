@@ -76,16 +76,16 @@ void setTerminalRawMode(bool enable) {
 void setNonBlockingInput(bool enable) {
 	int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	if (enable) {
-		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalità non bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalitï¿½ non bloccante
 	}
 	else {
-		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalità bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalitï¿½ bloccante
 	}
 }
 
 void monitorKeypress() {
 	setTerminalRawMode(true);
-	setNonBlockingInput(true);  // Imposta stdin in modalità non bloccante
+	setNonBlockingInput(true);  // Imposta stdin in modalitï¿½ non bloccante
 
 	while (!stopMonitorKey) {
 		Timer::SleepMillis(1);
@@ -97,7 +97,7 @@ void monitorKeypress() {
 		}
 	}
 
-	setNonBlockingInput(false);  // Ripristina modalità normale
+	setNonBlockingInput(false);  // Ripristina modalitï¿½ normale
 	setTerminalRawMode(false);
 }
 #endif
@@ -111,7 +111,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random]\n \n");
+	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -122,6 +122,8 @@ void printUsage() {
 	printf(" -stop: Stop when all prefixes are found\n");
 	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default\n");
 	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
+	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
+	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
 	exit(-1);
 
 }
@@ -561,6 +563,8 @@ int main(int argc, char* argv[]) {
 	uint32_t maxFound = 65536*4;
 	int range = 30;
 	string start = "0";
+	int slices = 1;  // Default slices value
+	string gridParsed = "";  // For parsing grid parameter
 	
 	// bitcrack mod
 	BITCRACK_PARAM bitcrack, *bc;
@@ -623,6 +627,20 @@ int main(int argc, char* argv[]) {
 			maxFound = getInt("maxFound", argv[a]);
 			a++;
 		}
+		else if (strcmp(argv[a], "-grid") == 0) {
+			a++;
+			gridParsed = string(argv[a]);
+			a++;
+		}
+		else if (strcmp(argv[a], "-slices") == 0) {
+			a++;
+			slices = getInt("slices", argv[a]);
+			if (slices < 1) {
+				fprintf(stderr, "[ERROR] slices must be >= 1\n");
+				exit(-1);
+			}
+			a++;
+		}
 
 		else if (a == argc - 1) {
 			address.push_back(string(argv[a]));
@@ -636,6 +654,25 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "VanitySearch-Bitcrack v" RELEASE "\n");
+
+	// Parse grid parameter if provided
+	if (!gridParsed.empty()) {
+		size_t commaPos = gridParsed.find(',');
+		if (commaPos != string::npos) {
+			try {
+				int gridX = std::stoi(gridParsed.substr(0, commaPos));
+				int gridY = std::stoi(gridParsed.substr(commaPos + 1));
+				gridSize.push_back(gridX);
+				gridSize.push_back(gridY);
+			} catch (std::exception& e) {
+				fprintf(stderr, "[ERROR] Invalid grid format. Use: -grid x,y\n");
+				exit(-1);
+			}
+		} else {
+			fprintf(stderr, "[ERROR] Invalid grid format. Use: -grid x,y\n");
+			exit(-1);
+		}
+	}
 
 	if (gridSize.size() == 0) {
 		for (int i = 0; i < gpuId.size(); i++) {
@@ -674,6 +711,8 @@ int main(int argc, char* argv[]) {
 		fprintf(stdout, "[keyspace]  range=2^%d\n", range);
 		fprintf(stdout, "[keyspace]  start=%s\n", bc->ksStart.GetBase16().c_str());
 		fprintf(stdout, "[keyspace]    end=%s\n", bc->ksFinish.GetBase16().c_str());
+		fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
+		fprintf(stdout, "[GPU] Slices: %d\n", slices);
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
 		}
@@ -690,7 +729,7 @@ int main(int argc, char* argv[]) {
 		}
 	repeatP:
 		Paused = false;
-		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc);
+		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices);
 		v->Search(gpuId, gridSize);
 
 		while (Paused) {
