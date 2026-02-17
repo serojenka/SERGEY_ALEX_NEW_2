@@ -111,7 +111,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump]\n \n");
+	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump] [-P bytes]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -125,6 +125,7 @@ void printUsage() {
 	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
 	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
 	printf(" -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, search continues from current_key + jump\n");
+	printf(" -P bytes: Set number of RIPEMD-160 hash bytes to match (range: 1-20, default: 20). Lower values find more matches faster\n");
 	exit(-1);
 
 }
@@ -568,6 +569,7 @@ int main(int argc, char* argv[]) {
 	string gridParsed = "";  // For parsing grid parameter
 	string jumpAfterMatch = "0";  // Decimal jump value to apply after finding a match
 	bool jumpSpecified = false;  // Track if -j was explicitly specified
+	int prefixLength = 20;  // Default: match all 20 bytes of RIPEMD-160
 	
 	// bitcrack mod
 	BITCRACK_PARAM bitcrack, *bc;
@@ -665,6 +667,15 @@ int main(int argc, char* argv[]) {
 			jumpSpecified = true;
 			a++;
 		}
+		else if (strcmp(argv[a], "-P") == 0) {
+			a++;
+			prefixLength = getInt("prefixLength", argv[a]);
+			if (prefixLength < 1 || prefixLength > 20) {
+				fprintf(stderr, "[ERROR] prefix length must be between 1 and 20 bytes\n");
+				exit(-1);
+			}
+			a++;
+		}
 
 		else if (a == argc - 1) {
 			address.push_back(string(argv[a]));
@@ -743,6 +754,9 @@ int main(int argc, char* argv[]) {
 		if (jumpSpecified && jumpAfterMatch != "0") {
 			fprintf(stdout, "[Jump] After match jump: %s (decimal)\n", jumpAfterMatch.c_str());
 		}
+		if (prefixLength < 20) {
+			fprintf(stdout, "[Prefix] Matching first %d bytes of RIPEMD-160 (out of 20 total)\n", prefixLength);
+		}
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
 		}
@@ -759,7 +773,7 @@ int main(int argc, char* argv[]) {
 		}
 	repeatP:
 		Paused = false;
-		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch);
+		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch, prefixLength);
 		v->Search(gpuId, gridSize);
 
 		while (Paused) {

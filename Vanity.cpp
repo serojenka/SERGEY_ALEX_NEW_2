@@ -44,7 +44,7 @@ using namespace std;
 //Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
-	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch):inputAddresses(inputAddresses) 
+	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch, int prefixLength):inputAddresses(inputAddresses) 
 {
 	this->secp = secp;
 	this->searchMode = searchMode;
@@ -55,6 +55,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->searchType = -1;
 	this->bc = bc;	
 	this->slices = slices;
+	this->prefixLength = prefixLength;
 	
 	// Parse jump after match value
 	this->jumpAfterMatch.SetBase10(const_cast<char*>(jumpAfterMatch.c_str()));
@@ -630,7 +631,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 			if (stopWhenFound && *((*pi)[i].found))
 				continue;
 
-			if (ripemd160_comp_hash((*pi)[i].hash160, hash160)) {
+			if (ripemd160_comp_hash_prefix((*pi)[i].hash160, hash160, prefixLength)) {
 
 				// Found it !
 				*((*pi)[i].found) = true;
