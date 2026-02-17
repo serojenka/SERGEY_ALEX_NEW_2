@@ -987,7 +987,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 			}
 
 			// Launch kernel multiple times based on slices for better GPU utilization
-			for (int _slice = 0; _slice < slices && ok; _slice++) {
+			for (int sliceIdx = 0; sliceIdx < slices && ok; sliceIdx++) {
 				ok = g.Launch(found, true);
 			}
 			idxcount += 1;
