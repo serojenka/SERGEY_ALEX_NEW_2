@@ -111,7 +111,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j]\n \n");
+	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -124,7 +124,7 @@ void printUsage() {
 	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
 	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
 	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
-	printf(" -j jump: Set jump size in bits for random mode (default: 256). Determines the size of random jumps\n");
+	printf(" -j jump: Set jump size in bits for random mode (default: 256, range: 1-256). Determines the size of random jumps\n");
 	exit(-1);
 
 }
