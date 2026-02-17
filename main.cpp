@@ -711,6 +711,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stdout, "[keyspace]  range=2^%d\n", range);
 		fprintf(stdout, "[keyspace]  start=%s\n", bc->ksStart.GetBase16().c_str());
 		fprintf(stdout, "[keyspace]    end=%s\n", bc->ksFinish.GetBase16().c_str());
+		// gridSize should always have exactly 2 elements (validated earlier)
 		if (gridSize.size() >= 2) {
 			fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
 		}
