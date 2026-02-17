@@ -647,6 +647,22 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[a], "-j") == 0) {
 			a++;
 			jumpAfterMatch = string(argv[a]);
+			// Validate that jump value is a valid non-negative decimal number
+			bool valid = true;
+			if (jumpAfterMatch.empty()) {
+				valid = false;
+			} else {
+				for (size_t i = 0; i < jumpAfterMatch.length(); i++) {
+					if (!isdigit(jumpAfterMatch[i])) {
+						valid = false;
+						break;
+					}
+				}
+			}
+			if (!valid) {
+				fprintf(stderr, "[ERROR] jump value must be a non-negative decimal number\n");
+				exit(-1);
+			}
 			jumpSpecified = true;
 			a++;
 		}

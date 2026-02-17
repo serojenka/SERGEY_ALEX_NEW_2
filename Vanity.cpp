@@ -36,6 +36,7 @@
 
 
 //#define GRP_SIZE 256
+#define RANDOM_JUMP_SIZE_BITS 256  // Default random jump size for random mode
 
 using namespace std;
 
@@ -987,7 +988,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				RandomJump_K_last.Set(&RandomJump_K);
 				RandomJump_K_tot.Add(&RandomJump_K);
 
-				RandomJump_K.Rand(256);
+				RandomJump_K.Rand(RANDOM_JUMP_SIZE_BITS);
 				RandomJump_K.Mod(&stepThread);
 				RandomJump_K.Sub(&RandomJump_K_tot);
 				
