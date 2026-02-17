@@ -104,6 +104,7 @@ void monitorKeypress() {
 
 
 #define RELEASE "2.2 by FixedPaul"
+#define DEFAULT_JUMP_BITS 256
 
 using namespace std;
 
@@ -566,7 +567,8 @@ int main(int argc, char* argv[]) {
 	string start = "0";
 	int slices = 1;  // Default slices value
 	string gridParsed = "";  // For parsing grid parameter
-	int jumpBits = 256;  // Default jump size in bits for random mode
+	int jumpBits = DEFAULT_JUMP_BITS;  // Default jump size in bits for random mode
+	bool jumpSpecified = false;  // Track if -j was explicitly specified
 	
 	// bitcrack mod
 	BITCRACK_PARAM bitcrack, *bc;
@@ -650,6 +652,7 @@ int main(int argc, char* argv[]) {
 				fprintf(stderr, "[ERROR] jump must be between 1 and 256\n");
 				exit(-1);
 			}
+			jumpSpecified = true;
 			a++;
 		}
 
@@ -665,6 +668,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "VanitySearch-Bitcrack v" RELEASE "\n");
+
+	// Validate parameter combinations
+	if (jumpSpecified && !randomMode) {
+		fprintf(stdout, "[WARNING] -j parameter specified without -random mode. Jump size will be ignored.\n");
+	}
 
 	// Parse grid parameter if provided
 	if (!gridParsed.empty()) {

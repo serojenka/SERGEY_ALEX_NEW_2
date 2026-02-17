@@ -27,6 +27,8 @@
 #include <Windows.h>
 #endif
 
+#define DEFAULT_JUMP_BITS 256
+
 extern std::atomic<bool> Pause;
 extern std::atomic<bool> Paused;
 extern int idxcount;
@@ -92,7 +94,7 @@ class VanitySearch {
 public:
 
 	VanitySearch(Secp256K1* secp, std::vector<std::string>& address, int searchMode,
-		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices = 1, int jumpBits = 256);
+		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices = 1, int jumpBits = DEFAULT_JUMP_BITS);
 
 	void Search(std::vector<int> gpuId, std::vector<int> gridSize);
 	void FindKeyGPU(TH_PARAM* p);
