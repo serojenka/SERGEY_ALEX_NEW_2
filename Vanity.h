@@ -101,7 +101,7 @@ private:
 
 	std::string GetHex(std::vector<unsigned char>& buffer);
 	std::string GetExpectedTimeBitCrack(double keyRate, double keyCount, BITCRACK_PARAM* bc);
-	bool checkPrivKey(std::string addr, Int& key, int32_t incr, int endomorphism, bool mode);
+	bool checkPrivKey(std::string addr, Int& key, int32_t incr, int endomorphism, bool mode, bool isFullMatch = false);
 	void checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t incr, int endomorphism, bool mode);
 	void checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* h4,
 		int32_t incr1, int32_t incr2, int32_t incr3, int32_t incr4,
