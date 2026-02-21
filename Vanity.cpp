@@ -538,7 +538,7 @@ void VanitySearch::updateFound() {
 	}		
 }
 
-bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomorphism, bool mode) {
+bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomorphism, bool mode, bool isFullMatch) {
 
 	Int k(&key);	
 
@@ -583,12 +583,16 @@ bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomor
 
 	}
 
-	if (candidateMode && prefixLength < 20) {
+	if (isFullMatch) {
+		output(addr, secp->GetPrivAddress(mode, k), k.GetBase16(), secp->GetPublicKeyHex(mode, p));
+		endOfSearch = true;
+	} else if (candidateMode && prefixLength < 20) {
 		outputCandidate(addr, k.GetBase16());
+		applyJumpAfterMatch(k);
 	} else {
 		output(addr, secp->GetPrivAddress(mode, k), k.GetBase16(), secp->GetPublicKeyHex(mode, p));
+		applyJumpAfterMatch(k);
 	}
-	applyJumpAfterMatch(k);
 
 	return true;
 }
@@ -669,8 +673,10 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 
 				// Found it !
 				*((*pi)[i].found) = true;
+				// Check if this is a full 20-byte match (takes priority over partial match handling)
+				bool isFullMatch = ripemd160_comp_hash((*pi)[i].hash160, hash160);
 				// You believe it ?
-				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
+				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode, isFullMatch)) {
 					nbFoundKey++;
 					updateFound();
 				}
