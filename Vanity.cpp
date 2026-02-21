@@ -556,6 +556,7 @@ bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomor
 	}
 
 	output(addr, secp->GetPrivAddress(mode, k), k.GetBase16(), secp->GetPublicKeyHex(mode, p));
+	applyJumpAfterMatch(k);
 
 	return true;
 }
@@ -610,8 +611,9 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 	}
 }
 
-void VanitySearch::applyJumpAfterMatch() {
+void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 	if (hasJumpAfterMatch) {
+		bc->ksNext.Set(&foundKey);
 		bc->ksNext.Add(&jumpAfterMatch);
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
 			jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
@@ -639,7 +641,6 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					applyJumpAfterMatch();
 				}
 
 			}
@@ -667,7 +668,6 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(addr, key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					applyJumpAfterMatch();
 				}
 
 			}
