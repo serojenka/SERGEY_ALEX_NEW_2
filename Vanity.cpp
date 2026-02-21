@@ -44,7 +44,7 @@ using namespace std;
 //Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
-	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch, int prefixLength):inputAddresses(inputAddresses) 
+	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch, int prefixLength, bool candidateMode):inputAddresses(inputAddresses) 
 {
 	this->secp = secp;
 	this->searchMode = searchMode;
@@ -56,6 +56,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->bc = bc;	
 	this->slices = slices;
 	this->prefixLength = prefixLength;
+	this->candidateMode = candidateMode;
 	
 	// Parse jump after match value
 	this->jumpAfterMatch.SetBase10(const_cast<char*>(jumpAfterMatch.c_str()));
@@ -485,6 +486,33 @@ void VanitySearch::output(string addr, string pAddr, string pAddrHex, std::strin
 #endif
 }
 
+void VanitySearch::outputCandidate(string addr, string pAddrHex) {
+
+#ifdef WIN64
+	WaitForSingleObject(ghMutex, INFINITE);
+#else
+	pthread_mutex_lock(&ghMutex);
+#endif
+
+	FILE* f = fopen("candidates.txt", "a");
+	if (f == NULL) {
+		fprintf(stderr, "Cannot open candidates.txt for writing: %s\n", strerror(errno));
+	} else {
+		fprintf(f, "%s %s\n", addr.c_str(), pAddrHex.c_str());
+		fclose(f);
+	}
+	fprintf(stdout, "\n[Candidate] Addr: %s  HEX: %s\n", addr.c_str(), pAddrHex.c_str());
+	fflush(stdout);
+
+#ifdef WIN64
+	ReleaseMutex(ghMutex);
+#else
+	pthread_mutex_unlock(&ghMutex);
+#endif
+}
+
+
+
 void VanitySearch::updateFound() {
 
 	// Check if all addresses has been found
@@ -555,7 +583,11 @@ bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomor
 
 	}
 
-	output(addr, secp->GetPrivAddress(mode, k), k.GetBase16(), secp->GetPublicKeyHex(mode, p));
+	if (candidateMode && prefixLength < 20) {
+		outputCandidate(addr, k.GetBase16());
+	} else {
+		output(addr, secp->GetPrivAddress(mode, k), k.GetBase16(), secp->GetPublicKeyHex(mode, p));
+	}
 	applyJumpAfterMatch(k);
 
 	return true;

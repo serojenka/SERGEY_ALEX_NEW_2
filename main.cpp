@@ -173,7 +173,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump] [-P bytes]\n \n");
+	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump] [-P bytes] [-c]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -188,6 +188,7 @@ void printUsage() {
 	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
 	printf(" -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, search continues from current_key + jump\n");
 	printf(" -P bytes: Set number of RIPEMD-160 hash bytes to match (range: 1-20, default: 20). Lower values find more matches faster\n");
+	printf(" -c: Candidate mode. When set, partial matches (with -P < 20) are written to candidates.txt as \"address HEXkey\" instead of normal WIF output\n");
 	exit(-1);
 
 }
@@ -618,6 +619,7 @@ int main(int argc, char* argv[]) {
 	int a = 1;
 	bool stop = false;
 	bool backupMode = false;
+	bool candidateMode = false;
 	int searchMode = SEARCH_COMPRESSED;
 	vector<int> gpuId = { 0 };
 	string gpuParsed = "0";
@@ -682,6 +684,10 @@ int main(int argc, char* argv[]) {
 		}
 		else if (strcmp(argv[a], "-backup") == 0) {
 			backupMode = true;
+			a++;
+		}
+		else if (strcmp(argv[a], "-c") == 0) {
+			candidateMode = true;
 			a++;
 		}
 		else if (strcmp(argv[a], "-range") == 0) {
@@ -819,6 +825,9 @@ int main(int argc, char* argv[]) {
 		if (prefixLength < 20) {
 			fprintf(stdout, "[Prefix] Matching first %d bytes of RIPEMD-160 (out of 20 total)\n", prefixLength);
 		}
+		if (candidateMode && prefixLength < 20) {
+			fprintf(stdout, "[Candidate mode] Partial matches will be written to candidates.txt (address + HEX key)\n");
+		}
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
 		}
@@ -835,7 +844,7 @@ int main(int argc, char* argv[]) {
 		}
 	repeatP:
 		Paused = false;
-		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch, prefixLength);
+		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch, prefixLength, candidateMode);
 		v->Search(gpuId, gridSize);
 
 		while (Paused) {
