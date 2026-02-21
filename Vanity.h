@@ -92,7 +92,7 @@ class VanitySearch {
 public:
 
 	VanitySearch(Secp256K1* secp, std::vector<std::string>& address, int searchMode,
-		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices = 1, std::string jumpAfterMatch = "0", int prefixLength = 20);
+		bool stop, std::string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices = 1, std::string jumpAfterMatch = "0", int prefixLength = 20, bool candidateMode = false);
 
 	void Search(std::vector<int> gpuId, std::vector<int> gridSize);
 	void FindKeyGPU(TH_PARAM* p);
@@ -109,6 +109,7 @@ private:
 	void checkAddresses(bool compressed, Int key, int i, Point p1);
 	void checkAddressesSSE(bool compressed, Int key, int i, Point p1, Point p2, Point p3, Point p4);
 	void output(std::string addr, std::string pAddr, std::string pAddrHex, std::string pubKey);
+	void outputCandidate(std::string addr, std::string pAddrHex);
 	void applyJumpAfterMatch(Int& foundKey);  // Sets bc->ksNext to foundKey + jumpAfterMatch if hasJumpAfterMatch is true, displays jump message
 
 #ifdef WIN64
@@ -159,6 +160,7 @@ private:
 	Int jumpAfterMatch;  // Decimal jump value to apply after finding a match
 	bool hasJumpAfterMatch;  // Whether jump after match is enabled
 	int prefixLength;  // Number of RIPEMD-160 bytes to match (1-20)
+	bool candidateMode;  // When true, partial matches go to candidates.txt with address and HEX key
 
 	Int beta;
 	Int lambda;
