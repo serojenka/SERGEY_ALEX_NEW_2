@@ -70,9 +70,9 @@
  *   Убедитесь, что CUDA установлена правильно и nvcc в PATH
  * - For Linux: Edit Makefile to adjust CUDA path if needed
  *   Для Linux: Отредактируйте Makefile для настройки пути к CUDA при необходимости
- * - Supported CUDA architectures: compute_60, compute_61, compute_75, 
+ * - Supported CUDA architectures: compute_75, 
  *   compute_80, compute_86, compute_89
- *   Поддерживаемые архитектуры CUDA: compute_60, compute_61, compute_75,
+ *   Поддерживаемые архитектуры CUDA: compute_75,
  *   compute_80, compute_86, compute_89
  * ============================================================================
  */
