@@ -15,68 +15,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- * COMPILATION INSTRUCTIONS / ИНСТРУКЦИИ ПО КОМПИЛЯЦИИ
- * 
- * ============================================================================
- * LINUX:
- * ============================================================================
- * Prerequisites / Необходимые компоненты:
- *   - g++-9 or higher / g++-9 или выше
- *   - CUDA Toolkit 11.0 or higher / CUDA Toolkit 11.0 или выше
- *   - Make
- * 
- * Compilation command / Команда компиляции:
- *   make all
- * 
- * Debug build / Сборка для отладки:
- *   make debug=1 all
- * 
- * Clean build artifacts / Очистка артефактов сборки:
- *   make clean
- * 
- * The compiled binary will be: ./vanitysearch
- * Скомпилированный файл будет: ./vanitysearch
- * 
- * ============================================================================
- * WINDOWS 64-bit:
- * ============================================================================
- * Prerequisites / Необходимые компоненты:
- *   - Visual Studio 2019 or higher / Visual Studio 2019 или выше
- *   - CUDA Toolkit 11.0 or higher / CUDA Toolkit 11.0 или выше
- *   - Windows SDK
- * 
- * Method 1 - Visual Studio GUI / Метод 1 - Графический интерфейс Visual Studio:
- *   1. Open VanitySearch.sln in Visual Studio
- *      Откройте VanitySearch.sln в Visual Studio
- *   2. Select "Release" and "x64" configuration
- *      Выберите конфигурацию "Release" и "x64"
- *   3. Build -> Build Solution (Ctrl+Shift+B)
- *      Сборка -> Собрать решение (Ctrl+Shift+B)
- * 
- * Method 2 - Command Line / Метод 2 - Командная строка:
- *   Open "x64 Native Tools Command Prompt for VS 2019" and run:
- *   Откройте "x64 Native Tools Command Prompt for VS 2019" и выполните:
- *   
- *   msbuild VanitySearch.sln /p:Configuration=Release /p:Platform=x64
- * 
- * The compiled binary will be in: x64\Release\VanitySearch.exe
- * Скомпилированный файл будет в: x64\Release\VanitySearch.exe
- * 
- * ============================================================================
- * NOTES / ПРИМЕЧАНИЯ:
- * ============================================================================
- * - Ensure CUDA is properly installed and nvcc is in PATH
- *   Убедитесь, что CUDA установлена правильно и nvcc в PATH
- * - For Linux: Edit Makefile to adjust CUDA path if needed
- *   Для Linux: Отредактируйте Makefile для настройки пути к CUDA при необходимости
- * - Supported CUDA architectures: compute_60, compute_61, compute_75, 
- *   compute_80, compute_86, compute_89
- *   Поддерживаемые архитектуры CUDA: compute_60, compute_61, compute_75,
- *   compute_80, compute_86, compute_89
- * ============================================================================
- */
-
 
 #include <sstream> 
 #include "Timer.h"
@@ -138,16 +76,16 @@ void setTerminalRawMode(bool enable) {
 void setNonBlockingInput(bool enable) {
 	int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	if (enable) {
-		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalit� non bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalit� non bloccante
 	}
 	else {
-		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalit� bloccante
+		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalit� bloccante
 	}
 }
 
 void monitorKeypress() {
 	setTerminalRawMode(true);
-	setNonBlockingInput(true);  // Imposta stdin in modalit� non bloccante
+	setNonBlockingInput(true);  // Imposta stdin in modalit� non bloccante
 
 	while (!stopMonitorKey) {
 		Timer::SleepMillis(1);
@@ -159,7 +97,7 @@ void monitorKeypress() {
 		}
 	}
 
-	setNonBlockingInput(false);  // Ripristina modalit� normale
+	setNonBlockingInput(false);  // Ripristina modalit� normale
 	setTerminalRawMode(false);
 }
 #endif
@@ -173,7 +111,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-grid] [-slices] [-j jump] [-P bytes]\n \n");
+	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -182,12 +120,8 @@ void printUsage() {
 	printf(" -range bit range dimension. start -> (start + 2^range).\n");
 	printf(" -m: Max number of prefixes found by each kernel call, default is 262144 (use multiple of 65536)\n");
 	printf(" -stop: Stop when all prefixes are found\n");
-	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentially keys at each step. Not active by default\n");
+	printf(" -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default\n");
 	printf(" -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode. \n");
-	printf(" -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block\n");
-	printf(" -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance\n");
-	printf(" -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, search continues from current_key + jump\n");
-	printf(" -P bytes: Set number of RIPEMD-160 hash bytes to match (range: 1-20, default: 20). Lower values find more matches faster\n");
 	exit(-1);
 
 }
@@ -627,11 +561,6 @@ int main(int argc, char* argv[]) {
 	uint32_t maxFound = 65536*4;
 	int range = 30;
 	string start = "0";
-	int slices = 1;  // Default slices value
-	string gridParsed = "";  // For parsing grid parameter
-	string jumpAfterMatch = "0";  // Decimal jump value to apply after finding a match
-	bool jumpSpecified = false;  // Track if -j was explicitly specified
-	int prefixLength = 20;  // Default: match all 20 bytes of RIPEMD-160
 	
 	// bitcrack mod
 	BITCRACK_PARAM bitcrack, *bc;
@@ -694,50 +623,6 @@ int main(int argc, char* argv[]) {
 			maxFound = getInt("maxFound", argv[a]);
 			a++;
 		}
-		else if (strcmp(argv[a], "-grid") == 0) {
-			a++;
-			gridParsed = string(argv[a]);
-			a++;
-		}
-		else if (strcmp(argv[a], "-slices") == 0) {
-			a++;
-			slices = getInt("slices", argv[a]);
-			if (slices < 1) {
-				fprintf(stderr, "[ERROR] slices must be >= 1\n");
-				exit(-1);
-			}
-			a++;
-		}
-		else if (strcmp(argv[a], "-j") == 0) {
-			a++;
-			jumpAfterMatch = string(argv[a]);
-			// Validate that jump value is a valid non-negative decimal number
-			// Note: SetBase10() interprets the string as decimal (base 10) regardless of leading zeros
-			bool valid = !jumpAfterMatch.empty();
-			if (valid) {
-				for (char c : jumpAfterMatch) {
-					if (!isdigit(c)) {
-						valid = false;
-						break;
-					}
-				}
-			}
-			if (!valid) {
-				fprintf(stderr, "[ERROR] jump value must be a non-negative decimal number\n");
-				exit(-1);
-			}
-			jumpSpecified = true;
-			a++;
-		}
-		else if (strcmp(argv[a], "-P") == 0) {
-			a++;
-			prefixLength = getInt("prefixLength", argv[a]);
-			if (prefixLength < 1 || prefixLength > 20) {
-				fprintf(stderr, "[ERROR] prefix length must be between 1 and 20 bytes\n");
-				exit(-1);
-			}
-			a++;
-		}
 
 		else if (a == argc - 1) {
 			address.push_back(string(argv[a]));
@@ -751,25 +636,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "VanitySearch-Bitcrack v" RELEASE "\n");
-
-	// Parse grid parameter if provided
-	if (!gridParsed.empty()) {
-		size_t commaPos = gridParsed.find(',');
-		if (commaPos != string::npos) {
-			try {
-				int gridX = std::stoi(gridParsed.substr(0, commaPos));
-				int gridY = std::stoi(gridParsed.substr(commaPos + 1));
-				gridSize.push_back(gridX);
-				gridSize.push_back(gridY);
-			} catch (std::exception& e) {
-				fprintf(stderr, "[ERROR] Invalid grid format. Use: -grid x,y\n");
-				exit(-1);
-			}
-		} else {
-			fprintf(stderr, "[ERROR] Invalid grid format. Use: -grid x,y\n");
-			exit(-1);
-		}
-	}
 
 	if (gridSize.size() == 0) {
 		for (int i = 0; i < gpuId.size(); i++) {
@@ -808,17 +674,6 @@ int main(int argc, char* argv[]) {
 		fprintf(stdout, "[keyspace]  range=2^%d\n", range);
 		fprintf(stdout, "[keyspace]  start=%s\n", bc->ksStart.GetBase16().c_str());
 		fprintf(stdout, "[keyspace]    end=%s\n", bc->ksFinish.GetBase16().c_str());
-		// Only 1 GPU is supported (see Vanity.cpp line 1229), so gridSize has exactly 2 elements
-		if (gridSize.size() == 2) {
-			fprintf(stdout, "[GPU] Grid size: %dx%d\n", gridSize[0], gridSize[1]);
-		}
-		fprintf(stdout, "[GPU] Slices: %d\n", slices);
-		if (jumpSpecified && jumpAfterMatch != "0") {
-			fprintf(stdout, "[Jump] After match jump: %s (decimal)\n", jumpAfterMatch.c_str());
-		}
-		if (prefixLength < 20) {
-			fprintf(stdout, "[Prefix] Matching first %d bytes of RIPEMD-160 (out of 20 total)\n", prefixLength);
-		}
 		if (randomMode) {
 			fprintf(stdout, "Random Mode Enabled !\n");
 		}
@@ -835,7 +690,7 @@ int main(int argc, char* argv[]) {
 		}
 	repeatP:
 		Paused = false;
-		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc, slices, jumpAfterMatch, prefixLength);
+		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc);
 		v->Search(gpuId, gridSize);
 
 		while (Paused) {

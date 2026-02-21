@@ -21,7 +21,7 @@ This is useful in case the program closes for any reason.</li>
 # Usage
 
 
-VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop] [-random] [-backup] [-grid x,y] [-slices n] [-j jump] [-P bytes]
+VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop]
 
  -v: Print version
  
@@ -39,17 +39,9 @@ VanitySearch [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
 
  -stop: Stop when all prefixes are found
 
- -random: Random mode active. Each GPU thread scan 1024 random sequentially keys at each step. Not active by default
+ -random: Random mode active. Each GPU thread scan 1024 random sequentally keys at each step. Not active by default
 
  -backup: Backup mode allows resuming from the progress percentage of the last sequential search. It does not work with random mode.
-
- -grid x,y: Set GPU grid size (default: auto,128). First value: points per thread, Second value: threads per block. Inspired by Cyclone
-
- -slices n: Set number of batch slices for GPU optimization (default: 1). Higher values can improve performance by better utilizing GPU resources. Inspired by Cyclone
-
- -j jump: Set decimal jump value to apply after finding a match (default: 0 = no jump). When a match is found, the search continues from current_key + jump. This allows finding sequential patterns.
-
- -P bytes: Set number of RIPEMD-160 hash bytes to match (range: 1-20, default: 20). Lower values find more matches faster but less specific. Use to find addresses with common prefixes.
 
 
 If you want to search for multiple addresses or prefixes, insert them into the input file.
@@ -75,23 +67,11 @@ Windows:
 
 ```./VanitySearch.exe -gpuId 0 -start 100000000000000000 -range 68 -random 19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG```
 
-```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -j 1000 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
-
-```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -P 10 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
-
 ```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -backup 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
-
-```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 -grid 256,128 -slices 16 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
 
 Linux
 
 ```./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40```
-
-```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -grid 512,512 -slices 8 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
-
-```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -j 5000 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
-
-```./vanitysearch -gpuId 0 -start 3BA89530000000000 -range 41 -P 8 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
 
 
 # License

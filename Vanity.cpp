@@ -36,7 +36,6 @@
 
 
 //#define GRP_SIZE 256
-#define RANDOM_JUMP_SIZE_BITS 256  // Default random jump size for random mode
 
 using namespace std;
 
@@ -44,7 +43,7 @@ using namespace std;
 //Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
-	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc, int slices, string jumpAfterMatch, int prefixLength):inputAddresses(inputAddresses) 
+	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc):inputAddresses(inputAddresses) 
 {
 	this->secp = secp;
 	this->searchMode = searchMode;
@@ -54,12 +53,6 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->maxFound = maxFound;	
 	this->searchType = -1;
 	this->bc = bc;	
-	this->slices = slices;
-	this->prefixLength = prefixLength;
-	
-	// Parse jump after match value
-	this->jumpAfterMatch.SetBase10(const_cast<char*>(jumpAfterMatch.c_str()));
-	this->hasJumpAfterMatch = !this->jumpAfterMatch.IsZero();
 
 	rseed(static_cast<unsigned long>(time(NULL)));
 	
@@ -610,14 +603,6 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 	}
 }
 
-void VanitySearch::applyJumpAfterMatch() {
-	if (hasJumpAfterMatch) {
-		bc->ksNext.Add(&jumpAfterMatch);
-		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
-			jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
-	}
-}
-
 void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t incr, int endomorphism, bool mode) {
 	
 	vector<ADDRESS_ITEM>* pi = addresses[prefIdx].items;	
@@ -631,7 +616,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 			if (stopWhenFound && *((*pi)[i].found))
 				continue;
 
-			if (ripemd160_comp_hash_prefix((*pi)[i].hash160, hash160, prefixLength)) {
+			if (ripemd160_comp_hash((*pi)[i].hash160, hash160)) {
 
 				// Found it !
 				*((*pi)[i].found) = true;
@@ -639,7 +624,6 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					applyJumpAfterMatch();
 				}
 
 			}
@@ -667,7 +651,6 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				if (checkPrivKey(addr, key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
-					applyJumpAfterMatch();
 				}
 
 			}
@@ -985,7 +968,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				RandomJump_K_last.Set(&RandomJump_K);
 				RandomJump_K_tot.Add(&RandomJump_K);
 
-				RandomJump_K.Rand(RANDOM_JUMP_SIZE_BITS);
+				RandomJump_K.Rand(256);
 				RandomJump_K.Mod(&stepThread);
 				RandomJump_K.Sub(&RandomJump_K_tot);
 				
@@ -1002,10 +985,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				ok = g.SetRandomJump(RandomJump_P);
 			}
 
-			// Launch kernel multiple times based on slices for better GPU utilization
-			for (int sliceIdx = 0; sliceIdx < slices && ok; sliceIdx++) {
-				ok = g.Launch(found, true);
-			}
+			ok = g.Launch(found, true);
 			idxcount += 1;
 
 			if (!randomMode && idxcount%60==0) {
