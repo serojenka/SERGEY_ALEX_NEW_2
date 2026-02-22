@@ -655,7 +655,7 @@ void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 		Int nextKey;
 		nextKey.Set(&foundKey);
 		nextKey.Add(&jumpAfterMatch);
-		bc->ksNext.Set(&nextKey);
+		bc->ksStart.Set(&nextKey);
 		idxcount = 0;
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
 			jumpAfterMatch.GetBase10().c_str(), nextKey.GetBase16().c_str());
@@ -841,11 +841,6 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 
 	for (size_t i = grp_startkeys / 2; i < nbThread; i += grp_startkeys) {
 
-		double percentage = (100.0 * (double)(i + grp_startkeys / 2)) / (double)(nbThread);
-		printf("Setting starting keys... [%.2f%%] \r", percentage);
-		fflush(stdout);
-
-
 		for (j = 0; j < grp_startkeys / 2; j++) {
 			dx[j].ModSub(&p_delta[j].x, &p[i].x);
 		}
@@ -1003,7 +998,6 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys, (uint64_t)(1ULL * idxcount * g.GetStepSize()));
 
 	ok = g.SetKeys(publicKeys);
-	delete[] publicKeys;
 
 	ttot = Timer::get_tick() - t0;
 
@@ -1085,6 +1079,12 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				checkAddr(*(address_t*)(it.hash), it.hash, privkey, it.incr, it.endo, it.mode);
 			}
 
+			if (idxcount == 0) {
+				getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys, 0);
+				g.SetKeys(publicKeys);
+				keycount.Set(&bc->ksStart);
+			}
+
 			keycount.Add(STEP_SIZE);
 			keycount.Mult(numThreadsGPU);
 
@@ -1135,7 +1135,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	}
 
 
-	
+	delete[] publicKeys;
 
 	ph->isRunning = false;
 

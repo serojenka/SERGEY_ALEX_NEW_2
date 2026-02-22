@@ -110,7 +110,7 @@ private:
 	void checkAddressesSSE(bool compressed, Int key, int i, Point p1, Point p2, Point p3, Point p4);
 	void output(std::string addr, std::string pAddr, std::string pAddrHex, std::string pubKey);
 	void outputCandidate(std::string addr, std::string pAddrHex);
-	void applyJumpAfterMatch(Int& foundKey);  // Sets bc->ksNext to foundKey + jumpAfterMatch if hasJumpAfterMatch is true, displays jump message
+	void applyJumpAfterMatch(Int& foundKey);  // Sets bc->ksStart to foundKey + jumpAfterMatch if hasJumpAfterMatch is true, resets idxcount, displays jump message
 
 #ifdef WIN64
 	HANDLE mutex;
