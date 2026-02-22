@@ -654,6 +654,7 @@ void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 		nextKey.Set(&foundKey);
 		nextKey.Add(&jumpAfterMatch);
 		bc->ksNext.Set(&nextKey);
+		bc->ksStart.Set(&nextKey);
 		idxcount = 0;
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
 			jumpAfterMatch.GetBase10().c_str(), nextKey.GetBase16().c_str());
@@ -785,7 +786,7 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 	Int numthread;
 
 	stepThread.Set(&bc->ksFinish);
-	stepThread.Sub(&bc->ksNext);
+	stepThread.Sub(&bc->ksStart);
 	stepThread.AddOne();
 	numthread.SetInt32(nbThread);
 	stepThread.Div(&numthread);
