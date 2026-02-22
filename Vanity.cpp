@@ -195,8 +195,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	beta2.SetBase16("851695d49a83f8ef919bb86153cbcb16630fb68aed0a766a3ec693d68e6afa40");
 	lambda2.SetBase16("ac9c52b33fa3cf1f5ad9e3fd77ed9ba4a880b9fc8ec739c2e0cfc810b51283ce");
 
-	jumped = false;
-	startKey.Set(&bc->ksNext);	
+	startKey.Set(&bc->ksNext);
 
 	char* ctimeBuff;
 	time_t now = time(NULL);
@@ -657,7 +656,6 @@ void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 		bc->ksNext.Set(&nextKey);
 		bc->ksStart.Set(&nextKey);
 		idxcount = 0;
-		jumped = true;
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
 			jumpAfterMatch.GetBase10().c_str(), nextKey.GetBase16().c_str());
 	}
@@ -788,7 +786,7 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 	Int numthread;
 
 	stepThread.Set(&bc->ksFinish);
-	stepThread.Sub(&bc->ksStart);
+	stepThread.Sub(&bc->ksNext);
 	stepThread.AddOne();
 	numthread.SetInt32(nbThread);
 	stepThread.Div(&numthread);
@@ -1083,13 +1081,6 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				}
 			
 				checkAddr(*(address_t*)(it.hash), it.hash, privkey, it.incr, it.endo, it.mode);
-			}
-
-			if (jumped.exchange(false)) {
-				Point* newPublicKeys = new Point[numThreadsGPU];
-				getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, newPublicKeys, 0);
-				if (!g.SetKeys(newPublicKeys)) ok = false;
-				delete[] newPublicKeys;
 			}
 
 			keycount.Add(STEP_SIZE);
