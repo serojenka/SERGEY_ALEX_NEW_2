@@ -563,25 +563,27 @@ bool VanitySearch::checkPrivKey(string addr, Int& key, int32_t incr, int endomor
 	}
 
 	// Check addresses
-	Point p = secp->ComputePublicKey(&k);	
+	Point p = secp->ComputePublicKey(&k);
 
-	string chkAddr = secp->GetAddress(searchType, mode, p);
-	if (chkAddr != addr) {
-
-		// Key may be the opposite one (negative zero or compressed key)
-		k.Neg();
-		k.Add(&secp->order);
-		p = secp->ComputePublicKey(&k);
-		
+	if (!candidateMode) {
 		string chkAddr = secp->GetAddress(searchType, mode, p);
 		if (chkAddr != addr) {
-			fprintf(stdout, "\nWarning, wrong private key generated !\n");
-			fprintf(stdout, "  Addr :%s\n", addr.c_str());
-			fprintf(stdout, "  Check:%s\n", chkAddr.c_str());
-			fprintf(stdout, "  Endo:%d incr:%d comp:%d\n", endomorphism, incr, mode);
-			return false;
-		}
 
+			// Key may be the opposite one (negative zero or compressed key)
+			k.Neg();
+			k.Add(&secp->order);
+			p = secp->ComputePublicKey(&k);
+
+			string chkAddr = secp->GetAddress(searchType, mode, p);
+			if (chkAddr != addr) {
+				fprintf(stdout, "\nWarning, wrong private key generated !\n");
+				fprintf(stdout, "  Addr :%s\n", addr.c_str());
+				fprintf(stdout, "  Check:%s\n", chkAddr.c_str());
+				fprintf(stdout, "  Endo:%d incr:%d comp:%d\n", endomorphism, incr, mode);
+				return false;
+			}
+
+		}
 	}
 
 	if (isFullMatch) {
