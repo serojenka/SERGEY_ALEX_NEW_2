@@ -650,10 +650,10 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 
 void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 	if (hasJumpAfterMatch) {
-		bc->ksNext.Set(&foundKey);
 		Int nextKey;
 		nextKey.Set(&foundKey);
 		nextKey.Add(&jumpAfterMatch);
+		bc->ksNext.Set(&nextKey);
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
 			jumpAfterMatch.GetBase10().c_str(), nextKey.GetBase16().c_str());
 	}
