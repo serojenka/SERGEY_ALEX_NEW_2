@@ -995,6 +995,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	Int privkey;
 	Int part_key;
 	Int keycount;
+	keycount.Set(&bc->ksStart);
 
 	t0 = Timer::get_tick();
 
