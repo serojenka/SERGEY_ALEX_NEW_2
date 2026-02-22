@@ -62,6 +62,12 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	this->jumpAfterMatch.SetBase10(const_cast<char*>(jumpAfterMatch.c_str()));
 	this->hasJumpAfterMatch = !this->jumpAfterMatch.IsZero();
 
+	// Apply jump to initial bc->ksNext so jumps work from the start
+	if (this->hasJumpAfterMatch) {
+		bc->ksNext.Add(&this->jumpAfterMatch);
+		bc->ksStart.Set(&bc->ksNext);
+	}
+
 	rseed(static_cast<unsigned long>(time(NULL)));
 	
 	addresses.clear();
@@ -650,9 +656,11 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 void VanitySearch::applyJumpAfterMatch(Int& foundKey) {
 	if (hasJumpAfterMatch) {
 		bc->ksNext.Set(&foundKey);
-		bc->ksNext.Add(&jumpAfterMatch);
+		Int nextKey;
+		nextKey.Set(&foundKey);
+		nextKey.Add(&jumpAfterMatch);
 		fprintf(stdout, "\n[Jump] Applied jump of %s (decimal), continuing from 0x%s (hex)\n", 
-			jumpAfterMatch.GetBase10().c_str(), bc->ksNext.GetBase16().c_str());
+			jumpAfterMatch.GetBase10().c_str(), nextKey.GetBase16().c_str());
 	}
 }
 
