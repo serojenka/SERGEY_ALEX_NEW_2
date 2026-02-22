@@ -61,7 +61,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	// Parse jump after match value
 	this->jumpAfterMatch.SetBase10(const_cast<char*>(jumpAfterMatch.c_str()));
 	this->hasJumpAfterMatch = !this->jumpAfterMatch.IsZero();
-	if (hasJumpAfterMatch) bc->ksNext.Add(&jumpAfterMatch);
+	if (hasJumpAfterMatch) bc->ksNext.Add(&this->jumpAfterMatch);
 
 	rseed(static_cast<unsigned long>(time(NULL)));
 	
