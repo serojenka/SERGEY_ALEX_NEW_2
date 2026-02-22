@@ -162,6 +162,8 @@ private:
 	int prefixLength;  // Number of RIPEMD-160 bytes to match (1-20)
 	bool candidateMode;  // When true, partial matches go to candidates.txt with address and HEX key
 
+	std::atomic<bool> jumped;  // Set to true when a jump is applied, to trigger GPU key refresh
+
 	Int beta;
 	Int lambda;
 	Int beta2;
