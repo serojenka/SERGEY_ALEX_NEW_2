@@ -998,6 +998,7 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys, (uint64_t)(1ULL * idxcount * g.GetStepSize()));
 
 	ok = g.SetKeys(publicKeys);
+	delete[] publicKeys;
 
 	ttot = Timer::get_tick() - t0;
 
@@ -1079,12 +1080,6 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 				checkAddr(*(address_t*)(it.hash), it.hash, privkey, it.incr, it.endo, it.mode);
 			}
 
-			if (idxcount == 0) {
-				getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys, 0);
-				g.SetKeys(publicKeys);
-				keycount.Set(&bc->ksStart);
-			}
-
 			keycount.Add(STEP_SIZE);
 			keycount.Mult(numThreadsGPU);
 
@@ -1134,8 +1129,6 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 	}
 
-
-	delete[] publicKeys;
 
 	ph->isRunning = false;
 
